@@ -56,7 +56,7 @@ class AppleNavBar extends StatelessWidget implements PreferredSizeWidget {
                           fontWeight: isSelected
                               ? FontWeight.w600
                               : FontWeight.w400,
-                            color: isSelected
+                          color: isSelected
                               ? colorScheme.onSurface.withValues(alpha: 0.9)
                               : colorScheme.onSurface.withValues(alpha: 0.55),
                         ),

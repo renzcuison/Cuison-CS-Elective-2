@@ -121,10 +121,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   },
                   child: const Text(
                     'Buy',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                   ),
                 ),
                 const SizedBox(height: 16),
