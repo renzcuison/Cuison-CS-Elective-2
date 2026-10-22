@@ -1,177 +1,169 @@
 import 'package:flutter/material.dart';
 
 import '../models/pokemon.dart';
+import '../theme/platinum_colors.dart';
 
 class PokemonCard extends StatelessWidget {
   final Pokemon pokemon;
   final bool isFavorite;
+  final String? nickname;
   final VoidCallback? onToggleFavorite;
 
   const PokemonCard({
     super.key,
     required this.pokemon,
     required this.isFavorite,
+    this.nickname,
     this.onToggleFavorite,
   });
 
   @override
   Widget build(BuildContext context) {
-    final hue = (pokemon.id * 31) % 360;
-    final start = HSLColor.fromAHSL(1.0, hue.toDouble(), 0.82, 0.72).toColor();
-    final end = HSLColor.fromAHSL(
-      1.0,
-      ((hue + 24) % 360).toDouble(),
-      0.75,
-      0.62,
-    ).toColor();
+    final primaryType = pokemon.types.isEmpty ? null : pokemon.types.first;
 
-    return Container(
-      height: 196,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [start, end],
-        ),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.6),
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            offset: const Offset(0, 10),
-            blurRadius: 18,
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(22),
-        child: Stack(
-          children: [
-            Positioned(
-              right: -18,
-              top: -18,
-              child: Container(
-                width: 110,
-                height: 110,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.16),
-                  shape: BoxShape.circle,
-                ),
-              ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          child: Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: PlatinumColors.surface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFF484951)),
             ),
-            Positioned(
-              left: 12,
-              bottom: 12,
-              child: Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-            Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.18),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          '#${pokemon.id.toString().padLeft(3, '0')}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
-                            fontSize: 10,
-                          ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(13),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            PlatinumColors.raisedSurface,
+                            PlatinumColors.surface,
+                          ],
                         ),
                       ),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.18),
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: IconButton(
-                          tooltip: isFavorite
-                              ? 'Remove from favorites'
-                              : 'Add to favorites',
-                          onPressed: onToggleFavorite,
-                          icon: Icon(
-                            Icons.favorite,
-                            color: isFavorite
-                                ? Colors.red
-                                : Colors.white.withValues(alpha: 0.9),
-                          ),
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.all(6),
-                          constraints: const BoxConstraints(),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                  Positioned(
+                    top: 8,
+                    left: 9,
+                    child: Text(
+                      '#${pokemon.id.toString().padLeft(3, '0')}',
+                      style: const TextStyle(
+                        color: PlatinumColors.gold,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.7,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 3,
+                    right: 3,
+                    child: IconButton(
+                      tooltip: isFavorite
+                          ? 'Remove from favorites'
+                          : 'Add to favorites',
+                      onPressed: onToggleFavorite,
+                      visualDensity: VisualDensity.compact,
+                      constraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 32,
+                      ),
+                      padding: EdgeInsets.zero,
+                      icon: Icon(
+                        isFavorite ? Icons.favorite : Icons.favorite_border,
+                        size: 18,
+                        color: isFavorite
+                            ? PlatinumColors.crimson
+                            : PlatinumColors.silver,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(5, 20, 5, 5),
+                    child: Hero(
+                      tag: 'pokemon-${pokemon.id}',
                       child: Image.network(
                         pokemon.imageUrl,
                         fit: BoxFit.contain,
                         errorBuilder: (context, error, stackTrace) =>
                             const Icon(
-                              Icons.broken_image,
-                              size: 44,
-                              color: Colors.white,
+                              Icons.broken_image_outlined,
+                              size: 38,
+                              color: PlatinumColors.muted,
                             ),
                       ),
                     ),
                   ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(3, 7, 3, 0),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  nickname ?? pokemon.name.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: PlatinumColors.platinum,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 11,
+                    letterSpacing: 0.3,
+                  ),
                 ),
+              ),
+              if (primaryType != null)
                 Container(
-                  width: double.infinity,
-                  margin: const EdgeInsets.fromLTRB(10, 0, 10, 10),
-                  padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+                  margin: const EdgeInsets.only(left: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 5,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.06),
-                        offset: const Offset(0, 4),
-                        blurRadius: 8,
-                      ),
-                    ],
+                    color: PlatinumColors.darkCrimson,
+                    borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    pokemon.name.toUpperCase(),
-                    textAlign: TextAlign.center,
+                    primaryType.toUpperCase(),
                     style: const TextStyle(
-                      fontWeight: FontWeight.w900,
-                      color: Color(0xFF1F2A44),
-                      fontSize: 10,
-                      letterSpacing: 0.8,
+                      color: PlatinumColors.platinum,
+                      fontSize: 7,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.3,
                     ),
                   ),
                 ),
-              ],
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
+        if (nickname != null)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(3, 2, 3, 0),
+            child: Text(
+              pokemon.name.toUpperCase(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: PlatinumColors.muted,
+                fontSize: 8,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }
