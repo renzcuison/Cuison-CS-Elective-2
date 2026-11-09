@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import '../models/product.dart';
 import '../services/supabase_service.dart';
 
@@ -46,10 +47,7 @@ class _ShopScreenState extends State<ShopScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Shop Products'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Shop Products'), centerTitle: true),
       body: Column(
         children: [
           // 1. PRICE FILTER SLIDER SECTION
@@ -61,7 +59,10 @@ class _ShopScreenState extends State<ShopScreen> {
               children: [
                 Text(
                   'Price Range: \$${_priceRange.start.toStringAsFixed(0)} - \$${_priceRange.end.toStringAsFixed(0)}',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
                 RangeSlider(
                   values: _priceRange,
@@ -85,7 +86,7 @@ class _ShopScreenState extends State<ShopScreen> {
             ),
           ),
 
-          // 2. PRODUCT LIST / GRID SECTION
+          // 2. PRODUCT LIST & PAGINATION SECTION
           Expanded(
             child: FutureBuilder<List<Product>>(
               future: _productsFuture,
@@ -95,90 +96,107 @@ class _ShopScreenState extends State<ShopScreen> {
                 }
 
                 if (snapshot.hasError) {
-                  return Center(
-                    child: Text('Error: ${snapshot.error}'),
-                  );
+                  return Center(child: Text('Error: ${snapshot.error}'));
                 }
 
                 final products = snapshot.data ?? [];
 
-                if (products.isEmpty) {
-                  return const Center(
-                    child: Text('No products found in this price range.'),
-                  );
-                }
-
-                return GridView.builder(
-                  padding: const EdgeInsets.all(12),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.85,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                  ),
-                  itemCount: products.length,
-                  itemBuilder: (context, index) {
-                    final product = products[index];
-                    return Card(
-                      elevation: 2,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                return Column(
+                  children: [
+                    // Grid View / Empty State
+                    Expanded(
+                      child: products.isEmpty
+                          ? const Center(
+                              child: Text(
+                                'No products found in this price range.',
+                              ),
+                            )
+                          : GridView.builder(
+                              padding: const EdgeInsets.all(12),
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    childAspectRatio: 0.85,
+                                    crossAxisSpacing: 10,
+                                    mainAxisSpacing: 10,
+                                  ),
+                              itemCount: products.length,
+                              itemBuilder: (context, index) {
+                                final product = products[index];
+                                return Card(
+                                  elevation: 2,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.shopping_bag,
+                                        size: 48,
+                                        color: Theme.of(context).primaryColor,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        product.name,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '\$${product.price.toStringAsFixed(2)}',
+                                        style: const TextStyle(
+                                          color: Colors.green,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(8.0),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          top: BorderSide(color: Colors.grey.shade300),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Icon(Icons.shopping_bag, size: 48, color: Theme.of(context).primaryColor),
-                          const SizedBox(height: 8),
+                          ElevatedButton(
+                            onPressed: _currentPage > 0
+                                ? () {
+                                    setState(() {
+                                      _currentPage--;
+                                    });
+                                    _loadProducts();
+                                  }
+                                : null,
+                            child: const Text('Previous'),
+                          ),
                           Text(
-                            product.name,
-                            textAlign: TextAlign.center,
+                            'Page ${_currentPage + 1}',
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '\$${product.price.toStringAsFixed(2)}',
-                            style: const TextStyle(color: Colors.green, fontWeight: FontWeight.w600),
+                          ElevatedButton(
+                            onPressed: products.length == _itemsPerPage
+                                ? () {
+                                    setState(() {
+                                      _currentPage++;
+                                    });
+                                    _loadProducts();
+                                  }
+                                : null, 
+                            child: const Text('Next'),
                           ),
                         ],
                       ),
-                    );
-                  },
+                    ),
+                  ],
                 );
               },
-            ),
-          ),
-
-          // 3. PAGINATION CONTROLS
-          Container(
-            padding: const EdgeInsets.all(8.0),
-            decoration: BoxDecoration(
-              border: Border(top: BorderSide(color: Colors.grey.shade300)),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                ElevatedButton(
-                  onPressed: _currentPage > 0
-                      ? () {
-                          setState(() {
-                            _currentPage--;
-                          });
-                          _loadProducts();
-                        }
-                      : null,
-                  child: const Text('Previous'),
-                ),
-                Text(
-                  'Page ${_currentPage + 1}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      _currentPage++;
-                    });
-                    _loadProducts();
-                  },
-                  child: const Text('Next'),
-                ),
-              ],
             ),
           ),
         ],
