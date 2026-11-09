@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-
 import '../models/product.dart';
 import '../services/supabase_service.dart';
+import '../widgets/filter_section.dart';
+import '../widgets/pagination_bar.dart';
+import '../widgets/product_card.dart';
+import '../widgets/product_skeleton.dart';
 
 class ShopScreen extends StatefulWidget {
   const ShopScreen({super.key});
@@ -15,6 +18,7 @@ class _ShopScreenState extends State<ShopScreen> {
 
   // Filter State
   RangeValues _priceRange = const RangeValues(0, 300);
+  bool _showFilter = false;
 
   // Pagination State
   int _currentPage = 0;
@@ -40,159 +44,125 @@ class _ShopScreenState extends State<ShopScreen> {
   }
 
   void _resetPaginationAndLoad() {
-    _currentPage = 0; // Reset to page 1 whenever price filter changes
+    _currentPage = 0;
     _loadProducts();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Shop Products'), centerTitle: true),
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        scrolledUnderElevation: 0,
+        elevation: 0,
+        titleSpacing: 20,
+        title: const Text(
+          'Shop',
+          style: TextStyle(
+            color: Color(0xFF18181B),
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(
+              _showFilter ? Icons.tune : Icons.tune_outlined,
+              color: const Color(0xFF18181B),
+              size: 22,
+            ),
+            onPressed: () {
+              setState(() {
+                _showFilter = !_showFilter;
+              });
+            },
+          ),
+          const SizedBox(width: 12),
+        ],
+      ),
       body: Column(
         children: [
-          // 1. PRICE FILTER SLIDER SECTION
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            color: Colors.grey.shade100,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Price Range: \$${_priceRange.start.toStringAsFixed(0)} - \$${_priceRange.end.toStringAsFixed(0)}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-                RangeSlider(
-                  values: _priceRange,
-                  min: 0,
-                  max: 300,
-                  divisions: 30,
-                  labels: RangeLabels(
-                    '\$${_priceRange.start.round()}',
-                    '\$${_priceRange.end.round()}',
-                  ),
-                  onChanged: (RangeValues values) {
-                    setState(() {
-                      _priceRange = values;
-                    });
-                  },
-                  onChangeEnd: (RangeValues values) {
-                    _resetPaginationAndLoad();
-                  },
-                ),
-              ],
-            ),
+          // 1. FILTER SECTION WIDGET
+          FilterSection(
+            isVisible: _showFilter,
+            priceRange: _priceRange,
+            onChanged: (RangeValues values) {
+              setState(() {
+                _priceRange = values;
+              });
+            },
+            onChangeEnd: (RangeValues values) {
+              _resetPaginationAndLoad();
+            },
           ),
 
-          // 2. PRODUCT LIST & PAGINATION SECTION
+          // 2. PRODUCT CATALOG & SKELETON LOADER
           Expanded(
             child: FutureBuilder<List<Product>>(
               future: _productsFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const ProductSkeleton();
                 }
 
                 if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
+                  return Center(
+                    child: Text(
+                      'Unable to load items: ${snapshot.error}',
+                      style: const TextStyle(color: Color(0xFF71717A), fontSize: 13),
+                    ),
+                  );
                 }
 
                 final products = snapshot.data ?? [];
 
                 return Column(
                   children: [
-                    // Grid View / Empty State
                     Expanded(
                       child: products.isEmpty
                           ? const Center(
                               child: Text(
                                 'No products found in this price range.',
+                                style: TextStyle(color: Color(0xFF71717A), fontSize: 14),
                               ),
                             )
                           : GridView.builder(
-                              padding: const EdgeInsets.all(12),
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 2,
-                                    childAspectRatio: 0.85,
-                                    crossAxisSpacing: 10,
-                                    mainAxisSpacing: 10,
-                                  ),
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                childAspectRatio: 0.68,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 24,
+                              ),
                               itemCount: products.length,
                               itemBuilder: (context, index) {
-                                final product = products[index];
-                                return Card(
-                                  elevation: 2,
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.shopping_bag,
-                                        size: 48,
-                                        color: Theme.of(context).primaryColor,
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        product.name,
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        '\$${product.price.toStringAsFixed(2)}',
-                                        style: const TextStyle(
-                                          color: Colors.green,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                return ProductCard(
+                                  product: products[index],
+                                  onTap: () {
+                                    // Handle item selection/navigation
+                                  },
                                 );
                               },
                             ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.all(8.0),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          top: BorderSide(color: Colors.grey.shade300),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          ElevatedButton(
-                            onPressed: _currentPage > 0
-                                ? () {
-                                    setState(() {
-                                      _currentPage--;
-                                    });
-                                    _loadProducts();
-                                  }
-                                : null,
-                            child: const Text('Previous'),
-                          ),
-                          Text(
-                            'Page ${_currentPage + 1}',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          ElevatedButton(
-                            onPressed: products.length == _itemsPerPage
-                                ? () {
-                                    setState(() {
-                                      _currentPage++;
-                                    });
-                                    _loadProducts();
-                                  }
-                                : null, 
-                            child: const Text('Next'),
-                          ),
-                        ],
-                      ),
+
+                    // 3. PAGINATION BAR WIDGET
+                    PaginationBar(
+                      currentPage: _currentPage,
+                      hasNextPage: products.length == _itemsPerPage,
+                      onPrevious: () {
+                        setState(() {
+                          _currentPage--;
+                        });
+                        _loadProducts();
+                      },
+                      onNext: () {
+                        setState(() {
+                          _currentPage++;
+                        });
+                        _loadProducts();
+                      },
                     ),
                   ],
                 );
