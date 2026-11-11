@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/product.dart';
 import '../services/supabase_service.dart';
+import '../services/auth_service.dart';
 import '../widgets/filter_section.dart';
 import '../widgets/pagination_bar.dart';
 import '../widgets/product_card.dart';
@@ -15,12 +16,11 @@ class ShopScreen extends StatefulWidget {
 
 class _ShopScreenState extends State<ShopScreen> {
   final SupabaseService _supabaseService = SupabaseService();
+  final AuthService _authService = AuthService();
 
-  // Filter State
   RangeValues _priceRange = const RangeValues(0, 300);
   bool _showFilter = false;
 
-  // Pagination State
   int _currentPage = 0;
   final int _itemsPerPage = 6;
 
@@ -78,12 +78,21 @@ class _ShopScreenState extends State<ShopScreen> {
               });
             },
           ),
-          const SizedBox(width: 12),
+          IconButton(
+            icon: const Icon(
+              Icons.logout_rounded,
+              color: Color(0xFF18181B),
+              size: 20,
+            ),
+            onPressed: () async {
+              await _authService.signOut();
+            },
+          ),
+          const SizedBox(width: 8),
         ],
       ),
       body: Column(
         children: [
-          // 1. FILTER SECTION WIDGET
           FilterSection(
             isVisible: _showFilter,
             priceRange: _priceRange,
@@ -97,7 +106,6 @@ class _ShopScreenState extends State<ShopScreen> {
             },
           ),
 
-          // 2. PRODUCT CATALOG & SKELETON LOADER
           Expanded(
             child: FutureBuilder<List<Product>>(
               future: _productsFuture,
@@ -139,15 +147,12 @@ class _ShopScreenState extends State<ShopScreen> {
                               itemBuilder: (context, index) {
                                 return ProductCard(
                                   product: products[index],
-                                  onTap: () {
-                                    // Handle item selection/navigation
-                                  },
+                                  onTap: () {},
                                 );
                               },
                             ),
                     ),
 
-                    // 3. PAGINATION BAR WIDGET
                     PaginationBar(
                       currentPage: _currentPage,
                       hasNextPage: products.length == _itemsPerPage,
