@@ -19,9 +19,7 @@ class PaginationBar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
       decoration: const BoxDecoration(
-        border: Border(
-          top: BorderSide(color: Color(0xFFF4F4F5), width: 1.5),
-        ),
+        border: Border(top: BorderSide(color: Color(0xFFF4F4F5), width: 1.5)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -38,7 +36,10 @@ class PaginationBar extends StatelessWidget {
             ),
             onPressed: currentPage > 0 ? onPrevious : null,
             icon: const Icon(Icons.chevron_left, size: 18),
-            label: const Text('Previous', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+            label: const Text(
+              'Previous',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+            ),
           ),
           Text(
             'Page ${currentPage + 1}',
@@ -62,7 +63,10 @@ class PaginationBar extends StatelessWidget {
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Next', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                Text(
+                  'Next',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                ),
                 SizedBox(width: 4),
                 Icon(Icons.chevron_right, size: 18),
               ],
